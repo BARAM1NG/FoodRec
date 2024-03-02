@@ -21,7 +21,6 @@ def get_restaurant_address(restaurant_name):
     return address
 
 # 테스트용 코드
-restaurant_address = get_restaurant_address(input())
 
 # 참고 URL
 # https://velog.io/@ejc9501/%ED%8C%8C%EC%9D%B4%EC%8D%AC%EC%9C%BC%EB%A1%9C-%EC%9C%84%EB%8F%84%EA%B2%BD%EB%8F%84-%EC%B0%BE%EA%B8%B0geocoder-geocoding-API-%EA%B5%AC%EA%B8%80-%EC%8A%A4%ED%94%84%EB%A0%88%EB%93%9C%EC%8B%9C%ED%8A%B8
@@ -42,5 +41,3 @@ def geocoding(address):
     # 좌표를 가져오지 못한 경우 에러 출력
     except:
         print('[0, 0]')
-
-geocoding(restaurant_address)
