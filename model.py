@@ -1,4 +1,4 @@
-'''import numpy as np
+import numpy as np
 import pandas as pd
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import MinMaxScaler
@@ -48,7 +48,7 @@ class RestaurantRecommendationSystem:
 
         # 추천 음식점 인덱스 출력
         recommended_indices = indices[0]
-        return recommended_indices'''
+        return recommended_indices
     
 import numpy as np
 import pandas as pd
