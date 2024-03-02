@@ -1,3 +1,4 @@
+!pip install googlemaps
 import googlemaps
 from datetime import datetime
 
@@ -9,7 +10,7 @@ gmaps = googlemaps.Client(key=api_key)
 
 def get_restaurant_address(restaurant_name):
     # 장소 검색 API 호출
-    places_result = gmaps.places(query=restaurant_name)
+    places_result = gmaps.places(query=restaurant_name, language='ko')
 
     # 결과에서 첫 번째 장소 선택
     place = places_result['results'][0]
@@ -22,4 +23,4 @@ def get_restaurant_address(restaurant_name):
 # 테스트용 코드
 restaurant_name = "츠쿠모"
 restaurant_address = get_restaurant_address(restaurant_name)
-restaurant_address.split(',')
+restaurant_address
