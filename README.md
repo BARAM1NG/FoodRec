@@ -21,11 +21,13 @@ pip install -r requirements.txt
 
 3. Start the development server:
 ```
-streamlit run viz.py  
+streamlit run app.py  
 ```
 
-## Utilized Model
-- MLP
+## Utilized Model & Skill
+- MLP (Reliability)
+- Streamlit (Web demo)
+- Google Map API
 
 
 ## Our Project Archive
