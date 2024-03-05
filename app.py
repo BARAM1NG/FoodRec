@@ -17,7 +17,6 @@ import math
 
 # 외부 API
 from Latitude_longitude_API import get_restaurant_address, geocoding
-from Search import distance_func, search_func,  yeongtong_data_making
 from model import MLP, CustomDataset, Mapping, apply_log_to_columns
 
 # warnings ignore
