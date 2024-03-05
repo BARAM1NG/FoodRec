@@ -1,121 +1,83 @@
 import numpy as np
-import pandas as pd
-from sklearn.neural_network import MLPRegressor
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.neighbors import NearestNeighbors
+import torch
+import torch.nn as nn
+import torch.nn.functional as F #torch.nn.functional.logsigmoid 함수 사용
+from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
+from sklearn.model_selection import train_test_split
+import math
 
-class RestaurantRecommendationSystem:
-    def __init__(self, data, random_seed=42):
-        np.random.seed(random_seed)
+BATCH_SIZE = 10 #실험을 통해 수정
 
-        # 음식점 데이터 생성
-        self.prices = data.iloc[:, 2] # 1~5까지 저가, 중저가, 중가, 중고가, 고가
-        self.ratings = data.iloc[:, 3] # 네이버 별점
-        self.visitors_reviews = data.iloc[:, 4] # 방문자 리뷰수
-        self.blog_reviews = data.iloc[:5] # 블로그 리뷰수
+kind = {'한식':0, '양식':1, '아시아음식':2, '일식':3, '중식':4, '분식':5, '카페':6, '뷔페':7, '기타':8}
 
-        # 실제 점수
-        self.weights = data.iloc[:, 6] # 주관적 별점을 가중치로 설정
-        self.true_scores = (self.ratings + self.visitors_reviews + self.blog_reviews + self.prices) / 4
-        self.true_scores_scaled = MinMaxScaler().fit_transform(self.true_scores.reshape(-1, 1)).flatten()
+# 전처리 클래스
+#가게이름 | 음식종류 | 가격 | 구글 지도 별점 | 방문자 리뷰 | 블로그 리뷰 | 주소 | 주관적 별점
+class CustomDataset(Dataset):
+  def __init__(self, dataframe):
+    self.data = dataframe
 
-        # MLP 모델 생성 및 학습
-        self.X = np.column_stack((self.ratings, self.visitors_reviews, self.blog_reviews, self.prices))
-        self.y = self.true_scores_scaled
-        self.mlp = MLPRegressor(hidden_layer_sizes=(100,), max_iter=1000, random_state=random_seed)
-        self.mlp.fit(self.X, self.y)
+  def __len__(self):
+    return len(self.data)
 
-    def predict_score(self, new_data):
-        # 새로운 음식점의 점수에 대한 예측
-        predicted_score = self.mlp.predict(new_data)
-        logistic_score = 100 / (1 + np.exp(-predicted_score)) # 로지스틱 함수 통해서 0~1값으로 반환
-        return logistic_score
+  def __getitem__(self, idx):
+    _names = self.data.iloc[idx, 0]
+    _address = self.data.iloc[idx, 1]
+    _kinds = [kind[self.data.iloc[idx, 2]] for i in range(9)]
+    _x = self.data.iloc[idx, 3:7].astype(np.float32)
+    _target_score = self.data.iloc[idx, 7].astype(np.float32)
 
-    def recommend_restaurants(self, new_data, num_recommendations=3):
-        # KNN을 사용하여 음식점 추천
-        knn_weights = np.column_stack((self.weights * self.ratings, self.weights * self.visitors_reviews, self.weights * self.blog_reviews))
-        knn_data = np.column_stack((self.X, knn_weights))
-        knn_data_scaled = MinMaxScaler().fit_transform(knn_data)
+    return torch.tensor(_kinds), torch.tensor(_x), torch.tensor(_target_score)
 
-        new_data_weighted = np.column_stack((new_data[:, :3], np.array(self.weights)))
-        new_data_scaled = MinMaxScaler().fit_transform(new_data_weighted)
+# 매핑 함수
+def Mapping(score):
+  scaled_score= F.softmax(score)
 
-        knn = NearestNeighbors(n_neighbors = num_recommendations)
-        knn.fit(knn_data_scaled)
+  return scaled_score[:, 0].unsqueeze(1)
 
-        # 가중치를 적용하여 거리 계산
-        distances, indices = knn.kneighbors(new_data_scaled)
+# MLP 클래스
+class MLP(nn.Module):
+  def __init__(self, node_number, device):
+    super(MLP, self).__init__()
+    self.MLP = nn.Sequential(
+        nn.Linear(5, node_number),
+        nn.Linear(node_number, node_number*2),
+        nn.Linear(node_number*2, 2)
+    )
+    #음식 종류 기준 : 네이버
+    #한식, 양식, 아시아음식, 일식, 중식, 분식, 카페, 뷔페, 기타
+    self.weight_0 = nn.Parameter(torch.full((9,), 0.5, dtype=torch.float32))
 
-        # 추천 음식점 인덱스 출력
-        recommended_indices = indices[0]
-        return recommended_indices
+  def forward(self, x):
+    score = self.MLP(x)
+
+    return score
+
+# Kind 인코딩 함수  
+def encode_category(df):
+    category_mapping = {
+        '한식': 0,
+        '양식': 1,
+        '아시아음식': 2,
+        '일식': 3,
+        '중식': 4,
+        '분식': 5,
+        '카페': 6,
+        '뷔페': 7,
+        '기타': 8
+    }
+    df[0] = df[0].map(category_mapping)
+    return df
+
+
+# 인코딩 함수  
+def apply_log_to_columns(df):
+    kind = {'한식':0, '양식':1, '아시아음식':2, '일식':3, '중식':4, '분식':5, '카페':6, '뷔페':7, '기타':8}
+    columns_to_apply_log = [1, 3, 4]  # 원하는 열의 인덱스
+    for col in columns_to_apply_log:
+        df.iloc[:, col] = df.iloc[:, col].apply(lambda x: math.log(x))
     
-import numpy as np
-import pandas as pd
-from sklearn.neural_network import MLPRegressor
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.neighbors import NearestNeighbors
+    df = df.values.tolist()
 
-class DataProcessor:
-    def __init__(self, data):
-        self.prices = data.iloc[:, 2]
-        self.ratings = data.iloc[:, 3]
-        self.visitors_reviews = data.iloc[:, 4]
-        self.blog_reviews = data.iloc[:5]
-        self.weights = data.iloc[:, 6]
-        self.true_scores = (self.ratings + self.visitors_reviews + self.blog_reviews + self.prices) / 4
-        self.true_scores_scaled = MinMaxScaler().fit_transform(self.true_scores.reshape(-1, 1)).flatten()
-
-    def get_features_and_labels(self):
-        X = np.column_stack((self.ratings, self.visitors_reviews, self.blog_reviews, self.prices))
-        y = self.true_scores_scaled
-        return X, y
-
-class MLPModel:
-    def __init__(self, random_seed=42):
-        self.mlp = MLPRegressor(hidden_layer_sizes=(100,), max_iter=1000, random_state=random_seed)
-
-    def train(self, X, y):
-        self.mlp.fit(X, y)
-
-    def predict_score(self, new_data):
-        predicted_score = self.mlp.predict(new_data)
-        logistic_score = 100 / (1 + np.exp(-predicted_score))
-        return logistic_score
-
-class RestaurantRecommender:
-    def __init__(self, data_processor, mlp_model):
-        self.data_processor = data_processor
-        self.mlp_model = mlp_model
-
-    def recommend_restaurants(self, new_data, num_recommendations=3):
-        knn_weights = np.column_stack((self.data_processor.weights * self.data_processor.ratings,
-                                       self.data_processor.weights * self.data_processor.visitors_reviews,
-                                       self.data_processor.weights * self.data_processor.blog_reviews))
-        knn_data = np.column_stack((self.data_processor.get_features_and_labels()[0], knn_weights))
-        knn_data_scaled = MinMaxScaler().fit_transform(knn_data)
-
-        new_data_weighted = np.column_stack((new_data[:, :3], np.array(self.data_processor.weights)))
-        new_data_scaled = MinMaxScaler().fit_transform(new_data_weighted)
-
-        knn = NearestNeighbors(n_neighbors=num_recommendations)
-        knn.fit(knn_data_scaled)
-
-        distances, indices = knn.kneighbors(new_data_scaled)
-        recommended_indices = indices[0]
-        return recommended_indices
-
-# 데이터 로딩과 전처리
-data = pd.read_csv("train.csv")
-data_processor = DataProcessor(data)
-
-# MLP 모델 학습과 예측
-X, y = data_processor.get_features_and_labels()
-mlp_model = MLPModel()
-mlp_model.train(X, y)
-
-# 음식점 추천
-recommender = RestaurantRecommender(data_processor, mlp_model)
-new_data = np.array([[4.5, 100, 20, 3]])  # 예시: 평점 4.5, 방문자 리뷰수 100, 블로그 리뷰수 20, 가격 중간가
-recommendations = recommender.recommend_restaurants(new_data)
-print("Recommended restaurant indices:", recommendations)
+    df = [item for sublist in df for item in sublist]
+    return df
