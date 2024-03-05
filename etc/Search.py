@@ -18,7 +18,7 @@ import random
 # 주소 통해 위도 경도 받아오기
 import googlemaps
 from datetime import datetime
-my_key = "AIzaSyD-3sRu9IQcs67ci_9cCrXoSa5a1URELuE" #구글맵 API 키값
+my_key = id_api #구글맵 API 키값
 maps = googlemaps.Client(key=my_key)  # 구글맵 api 가져오기
 
 
