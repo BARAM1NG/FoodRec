@@ -1,6 +1,6 @@
-KHUDA 경희대학교 국제캠퍼스 맛집 추천 개발
+# KHUDA 경희대학교 국제캠퍼스 맛집 추천 개발
 
-## Table of Contents
+### Table of Contents
 * [General info](#general-info)
 * [Utilized Model & Skill](#UtilizedModel&Skill)
 * [Problem-solving process](#Problem-solvingProcess)
