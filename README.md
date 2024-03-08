@@ -31,10 +31,10 @@ streamlit run app.py
 - ~~Recommendation Algorithm~~
 
 ## Problem-solving process
-- We have devised an idea to reassess the reliability of restaurants from the perspective of students at Kyung Hee University, judging that the restaurant ratings on Google Maps are not reliable due to advertising jobs."
+- We have devised an idea to reassess the reliability of restaurants from the perspective of students at Kyung Hee University, judging that the restaurant ratings on Google Maps are not reliable due to advertising jobs.
 - In the process of developing an MLP model, we're incorporating inputs such as food type, price, Google Maps ratings, visitor reviews, and blog reviews to determine the trustworthiness (restaurant score) of each establishment.
 - We attempted to create a recommendation algorithm using KNN, but encountered difficulties in the specific algorithm creation process. As a result, We opted to develop an algorithm without utilizing KNN.
-- Continuing attempts in progress...
+  - Continuing attempts in progress...
 
 ## Web Demo Screen
 
