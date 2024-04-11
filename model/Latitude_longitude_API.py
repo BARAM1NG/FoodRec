@@ -3,7 +3,8 @@ import googlemaps
 from datetime import datetime
 
 # Google Places API 키 설정
-api_key = id_key
+api_key = 'AIzaSyD-3sRu9IQcs67ci_9cCrXoSa5a1URELuE'
+
 
 # Google Maps 클라이언트 생성
 gmaps = googlemaps.Client(key=api_key)
